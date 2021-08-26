@@ -200,3 +200,22 @@ def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
         iteration += 1
 
     return x_new, error
+
+# Calculating a system of three linear equations by Cramer technics
+def cramer(a, b):
+    assert a.shape[0] == a.shape[1], 'Matrix must be quadratic'
+    assert a.shape[0] == b.shape[0], 'The dimension of the matrix must the same as the vector of constants'
+    D = matrix_determinent(a)
+    temp = a.copy()
+    temp[:,0] = b
+    x1 = matrix_determinent(temp)/D
+
+    temp = a.copy()
+    temp[:,1] = b
+    x2 = matrix_determinent(temp)/D
+
+    temp = a.copy()
+    temp[:,2] = b
+    x3 = matrix_determinent(temp)/D
+
+    return x1, x2, x3

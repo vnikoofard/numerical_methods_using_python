@@ -201,6 +201,18 @@ def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
 
     return x_new, error
 
+# Calculating the derminent of a 2x2 or 3x3 matrix
+def matrix_determinent(a):
+    assert a.shape[0] == a.shape[1], 'Matrix must be quadratic'
+    assert len(a) == 2 or len(a) == 3, 'The shape of matrix must be 2x2 or 3x3'
+
+    if len(a) == 2:
+        return a[0,0]*a[1,1] - a[0,1]*a[1,0]
+    if len(a) == 3:
+        return a[0,0]*matrix_determinent(a[1:,[1,2]]) - a[0,1]*matrix_determinent(a[1:,[0,2]])+\
+            a[0,2]*matrix_determinent(a[1:,[0,1]])
+
+
 # Calculating a system of three linear equations by Cramer technics
 def cramer(a, b):
     assert a.shape[0] == a.shape[1], 'Matrix must be quadratic'
@@ -219,3 +231,101 @@ def cramer(a, b):
     x3 = matrix_determinent(temp)/D
 
     return x1, x2, x3
+
+# A minimal gauss elimination for solving a linear system
+def gauss_elimination_minimal(A, b):
+    """
+    A: a n-by-n numpy array
+    b: a 1d numpy array
+    """
+    assert A.shape[0] == A.shape[1], 'the matrix of coefficients must be squared'
+
+    mat = np.concatenate([A, b.reshape(-1,1)], axis=1)
+    for idx_i in range(0, len(mat)-1):
+        for idx_j in range(idx_i+1, len(mat)):
+            factor = mat[idx_j, idx_i] / mat[idx_i, idx_i] 
+            mat[idx_j] = mat[idx_j] - factor * mat[idx_i]
+
+    n = len(A)-1
+    xs = np.zeros(len(A))
+    xs[-1] = mat[n,n+1]/mat[n,n]
+
+    for i in range(n-1, -1, -1):
+        sum = mat[i, -1]
+        for j in range(0, len(A)):
+            sum -= mat[i, j]* xs[j]
+        xs[i] = sum / mat[i,i]
+
+    return xs
+
+# LU decomposion using gauss elimination
+def decompose(A):
+    """
+    A: a n-by-n numpy array
+    """
+    assert A.shape[0] == A.shape[1], 'the matrix of coefficients must be squared'
+
+    L = np.eye(len(A))
+    U = A.copy()
+
+    n = len(A)
+    for idx_i in range(0, n-1):
+        for idx_j in range(idx_i+1, n):
+            factor = U[idx_j, idx_i] / U[idx_i, idx_i] 
+            U[idx_j] = U[idx_j] - factor * U[idx_i]
+            L[idx_j, idx_i] = factor
+    
+
+    return L, U
+
+# A minimal Gauss-Seidel for linear systems
+def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20):
+    """
+    A: a n-by-n numpy array
+    b: a 1d numpy array
+    x0: initial guess, the same dimension as `b`
+    tol: tolerance
+    max_iter: maximum iteration
+    """
+    n = len(A)
+    assert len(x0) == n, 'the size of initial guess must be the same as the system'
+    assert all([A[i,i] != 0 for i in range(n)]), 'There is a zero in the diagonal of the matrix'
+    iteration = 0
+    x_old = xs = np.array(x0, dtype=np.float64)
+    error = np.ones(n)*100
+
+    while max(np.abs(error)) > tol and iteration < max_iter:
+        
+        for i in range(n):
+            xs[i] = (b[i] - sum(np.delete(xs, i) * np.delete(A[i, :], i)))/A[i, i]
+            error[i] = np.abs((xs[i] - x_old[i])/ xs[i])*100
+            x_old = xs.copy()
+        
+        iteration += 1
+
+    return xs
+
+
+
+# Linear Regression
+def linear_regression(x, y):
+    """
+    x, y: 1d numpy array or list.
+    """
+    assert len(x) == len(y), "x and y must have the same size"
+
+    x = np.array(x, dtype=np.float64)
+    y = np.array(y, dtype=np.float64)
+
+    n = len(x)
+    xy = sum(x*y)
+    x_2 = sum(x**2)
+    x_bar = x.sum()/n
+    y_bar = y.sum()/n
+    
+    #a0: interseção, a1:inclinação
+    a1 = (n * xy - x.sum() * y.sum())/(n * x_2 - x.sum()**2)
+    a0 = y_bar - a1 * x_bar
+
+    return a0, a1
+    

@@ -305,6 +305,26 @@ def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20):
 
     return xs
 
+# Chlesky decomposition for symmetric matrices
+def cholesky(A):
+    """
+    A: a symmetric nd array
+    Return: L and its transpose such that L.dot(L.T) = A
+    """
+
+    assert A.shape[0] == A.shape[1], 'The matrix must be square'
+    assert (A.T == A).all(), 'The matrix must be symmetric'
+    
+    L = np.zeros(A.shape)
+
+    for i in range(len(A)):
+        for j in range(i+1):
+            if i == j:
+                L[i, j] = np.sqrt(A[i, j] - sum(L[i, :i]**2))
+            else:
+                L[i, j] = (A[i, j] - sum(L[j, :j] * L[i, :j])) / L[j,j]
+    
+    return L, L.T
 
 
 # Linear Regression
@@ -329,3 +349,64 @@ def linear_regression(x, y):
 
     return a0, a1
     
+
+# Gauss-Newton algorithm for non-linear regression (non optimized implementation)
+def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
+    """
+    x: A (n,m) array contains measured values of the independent variables. `n` is the number of measurments and 
+    `m` is the number of independent variables.
+    y: A (n, 1) array contains the measured values of the dependent variable. 
+    func: a sympy function with symbolic variables
+    vars: list. the independent variables of the model
+    params: list. the parameters of the model to be adjusted
+    A0: list or array. An intial guess to the parameters
+
+
+    return the coeficients of the model (func)
+
+    Exemple:
+
+    a_0, a_1, x = sp.symbols('a_0, a_1 x')
+    func = a_0*(1 - sp.exp(-a_1*x))
+    xx = np.array([0.25, 0.75, 1.25, 1.75, 2.25]).reshape(-1, 1)
+    yy = np.array([0.28, 0.57, 0.68, 0.74, 0.79])
+
+    gauss_newton(xx, yy, func, [x], [a_0, a_1], [1,1])
+
+    """
+    A0 = np.array(A0, dtype=np.float64)
+    m = x.shape[1]
+    n = x.shape[0]
+
+    assert len(vars) == m, 'The number of independent variables must be the same as the columns of data'
+    assert len(params) == len(A0), 'The number of initial values must be the same as the number of parameters'
+
+    # creating a list of derivatives
+    
+    iteration = 1
+    error = np.ones(len(params))*100
+    A = A_old = A0
+
+    while max(error) > tol and iteration <= max_iter:
+        param_val = {p:v for p,v in zip(params, A)}
+        
+        dfuncs = [func.diff(var).subs(param_val) for var in params]
+        dfuncs_np = [sp.lambdify(vars, dfunc) for dfunc in dfuncs]
+
+        Z = np.array([[df(*i) for df in dfuncs_np] for i in x])
+        ZT = Z.T
+
+        func_new = func.subs(param_val)
+        func_np = sp.lambdify(vars, func_new)
+        D = y - np.array([func_np(*i) for i in x])
+        
+        DeltaA = np.linalg.inv(ZT.dot(Z)).dot(ZT.dot(D))
+        A_old = A.copy()
+        A += DeltaA
+
+        error =  np.abs((A - A_old)/A)*100
+
+
+        iteration +=1
+
+    return A

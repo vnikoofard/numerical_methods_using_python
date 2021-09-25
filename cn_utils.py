@@ -376,7 +376,7 @@ def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
     """
     A0 = np.array(A0, dtype=np.float64)
     m = x.shape[1]
-    n = x.shape[0]
+    #n = x.shape[0]
 
     assert len(vars) == m, 'The number of independent variables must be the same as the columns of data'
     assert len(params) == len(A0), 'The number of initial values must be the same as the number of parameters'

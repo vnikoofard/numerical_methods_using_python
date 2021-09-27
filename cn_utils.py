@@ -72,7 +72,7 @@ def bisection(func, xl, xu, tol=1e-3, max_iter=100):
             return xr
             
         error = abs((xr-xr_old)/xr) * 100
-        print('xr', xr, 'error', error)
+        #print('xr', xr, 'error', error)
 
         iter += 1
 
@@ -132,7 +132,7 @@ def fix_point(func, x0, tol=1e-3, max_iter=100):
     """
     func: a usual or lambda function
     x0: initial point
-    tolerance: desired erro for termination
+    tol: desired erro for termination
     max_iter: maximum iteration before stop
     """
     x_i = x0
@@ -147,7 +147,7 @@ def fix_point(func, x0, tol=1e-3, max_iter=100):
     
     return x_new, error
 
-# Segure version of Newton-Raphson
+# A modified version of Newton-Raphson
 
 def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
     """
@@ -199,6 +199,27 @@ def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
         x = x_new
         iteration += 1
 
+    return x_new, error
+
+# Modified secant method for calculating the root of a function
+def modifiedSecant(func, x0, delta=1e-2, tol=1e-3, max_iter=100):
+    """
+    func: a usual or lambda function
+    x0: initial point
+    delta: step size for divided fifference derivative
+    tol: desired erro for termination
+    max_iter: maximum iteration before stop
+    """
+    iteration = 0
+    error = 100
+
+    while error > tol and iteration <= max_iter:
+        f = func(x0)
+        x_new = x0 - f*delta*x0/(func(x0+delta*x0) - f)
+        error = (x_new - x0)/ x_new * 100
+        #print(x_new, error)
+        x0 = x_new  
+    
     return x_new, error
 
 # Calculating the derminent of a 2x2 or 3x3 matrix

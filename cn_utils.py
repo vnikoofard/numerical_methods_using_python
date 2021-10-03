@@ -431,3 +431,65 @@ def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
         iteration +=1
 
     return A
+
+# 1D Lagrange polinomial interpolation
+def lagrange_interpolation(x, y, n, xi):
+    """
+    x: a list of independent variables
+    y: a list of dependent variables
+    n: degree of polinomial 
+    xi: the point of interest to calculate f(xi)
+    """
+
+    assert len(x) == len(y), 'The same size'
+    assert len(x) > n, 'for the n-degree interpolation n+1 points are needed'
+
+    sum = 0
+    for i in range(n+1):
+        product = y[i]
+        for j in range(n+1):
+            if i != j:
+                product *= (xi - x[j])/(x[i] - x[j])
+        sum += product
+    
+    return sum
+
+# 1D Newton interpolation
+def newton_interpolation(x, y, n, xi, return_fdd=False, return_last=True):
+    """
+    x: a list of independent variables
+    y: a list of dependent variables
+    n: degree of polinomial 
+    xi: the point of interest to calculate f(xi)
+    return_fdd: if True will return the finite divided-diference terms
+    return_last: if False will return all of the approximation of f(xi) with polinomials lower than `n`
+    """
+
+    assert len(x) == len(y), 'the same size'
+    assert len(x) > n, 'for the n-degree interpolation n+1 points are needed'
+    
+    fdd = np.zeros((len(y), len(y)))
+    fdd[:, 0] = y
+
+    for j in range(1, n):
+        for i in range(0, n-j):
+            fdd[i, j] = (fdd[i+1, j-1] - fdd[i, j-1])/(x[i+j] - x[i])
+
+    
+    
+    errors = np.zeros(n-1)
+    ys = np.zeros(n)
+    ys[0] = y[0]
+    xterm = 1
+    for i in range(1, n):
+        xterm *= xi - x[i-1]
+        ys[i] = (ys[i-1] + xterm * fdd[0, i])
+        errors[i-1] = fdd[0, i] * xterm
+    
+    if return_last:
+        return y[-1], errors[-1]
+
+    elif return_fdd:
+        return ys, errors, fdd
+    else:
+        return ys, errors

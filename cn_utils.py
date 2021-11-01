@@ -304,7 +304,7 @@ def decompose(A):
     return L, U
 
 # A minimal Gauss-Seidel for linear systems
-def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20):
+def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20, return_error=False):
     """
     A: a n-by-n numpy array
     b: a 1d numpy array
@@ -330,8 +330,11 @@ def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20):
             x_old = xs.copy()
         
         iteration += 1
-
-    return xs
+    
+    if return_error:
+        return xs, error
+    else:
+        return xs
 
 # Chlesky decomposition for symmetric matrices
 def cholesky(A):

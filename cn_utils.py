@@ -256,9 +256,11 @@ def cramer(a, b):
 # A minimal gauss elimination for solving a linear system
 def gauss_elimination_minimal(A, b):
     """
-    A: a n-by-n numpy array
+    A: a n-by-n array
     b: a 1d numpy array
     """
+    A = np.array(A, dtype=float)
+    b = np.array(b, dtype=float)
     assert A.shape[0] == A.shape[1], 'the matrix of coefficients must be squared'
 
     mat = np.concatenate([A, b.reshape(-1,1)], axis=1)
@@ -284,6 +286,8 @@ def decompose(A):
     """
     A: a n-by-n numpy array
     """
+    A = np.array(A, dtype=float)
+
     assert A.shape[0] == A.shape[1], 'the matrix of coefficients must be squared'
 
     L = np.eye(len(A))
@@ -308,6 +312,9 @@ def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20):
     tol: tolerance
     max_iter: maximum iteration
     """
+    A = np.array(A, dtype=float)
+    b = np.array(b, dtype=float)
+
     n = len(A)
     assert len(x0) == n, 'the size of initial guess must be the same as the system'
     assert all([A[i,i] != 0 for i in range(n)]), 'There is a zero in the diagonal of the matrix'
@@ -332,7 +339,7 @@ def cholesky(A):
     A: a symmetric nd array
     Return: L and its transpose such that L.dot(L.T) = A
     """
-
+    A = np.array(A, dtype=float)
     assert A.shape[0] == A.shape[1], 'The matrix must be square'
     assert (A.T == A).all(), 'The matrix must be symmetric'
     

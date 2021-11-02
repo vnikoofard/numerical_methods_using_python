@@ -497,7 +497,7 @@ def newton_interpolation(x, y, n, xi, return_fdd=False, return_last=True):
         errors[i-1] = fdd[0, i] * xterm
     
     if return_last:
-        return y[-1], errors[-1]
+        return ys[-1], errors[-1]
 
     elif return_fdd:
         return ys, errors, fdd

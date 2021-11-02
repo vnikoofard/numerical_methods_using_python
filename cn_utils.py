@@ -455,9 +455,9 @@ def lagrange_interpolation(x, y, n, xi):
     assert len(x) > n, 'for the n-degree interpolation n+1 points are needed'
 
     sum = 0
-    for i in range(n):
+    for i in range(n+1):
         product = y[i]
-        for j in range(n):
+        for j in range(n+1):
             if i != j:
                 product *= (xi - x[j])/(x[i] - x[j])
         sum += product
@@ -478,6 +478,7 @@ def newton_interpolation(x, y, n, xi, return_fdd=False, return_last=True):
     assert len(x) == len(y), 'the same size'
     assert len(x) > n, 'for the n-degree interpolation n+1 points are needed'
     
+    n += 1
     fdd = np.zeros((len(y), len(y)))
     fdd[:, 0] = y
 

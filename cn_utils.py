@@ -447,7 +447,7 @@ def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
 
     a_0, a_1, x = sp.symbols('a_0, a_1 x')
     func = a_0*(1 - sp.exp(-a_1*x))
-    xx = np.array([0.25, 0.75, 1.25, 1.75, 2.25]).reshape(-1, 1)
+    xx = np.array([0.25, 0.75, 1.25, 1.75, 2.25])
     yy = np.array([0.28, 0.57, 0.68, 0.74, 0.79])
 
     gauss_newton(xx, yy, func, [x], [a_0, a_1], [1,1])
@@ -459,7 +459,7 @@ def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
     """
     A0 = np.array(A0, dtype=np.float64)
     m = x.shape[1]
-    #n = x.shape[0]
+    x = x.reshape(-1, 1)
 
     assert len(vars) == m, 'The number of independent variables must be the same as the columns of data'
     assert len(params) == len(A0), 'The number of initial values must be the same as the number of parameters'

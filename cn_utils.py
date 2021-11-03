@@ -358,7 +358,7 @@ def cholesky(A):
     return L, L.T
 
 
-# Linear Regression
+# 1D Linear Regression
 def linear_regression(x, y):
     """
     x, y: 1d numpy array or list.
@@ -379,10 +379,58 @@ def linear_regression(x, y):
     a0 = y_bar - a1 * x_bar
 
     return a0, a1
+
+# 1D polinomial Regression
+def polinomial_regression(X, Y, m, xi=None):
+    """This function does a m-degree polinomial regression using the procedure 
+    in the section 17.4 page 479 on the Numerical Methods for Engineers, 
+    by Chapra, seventh edition
+
+    Args:
+        X (numeric iterable): [the independent measurments] 
+        Y ([numeric iterable]): [the dependent measurments]
+        m ([int]): [the degree on the polinomial to adjust]
+        xi ([a number of numeric iterable]): [the point(s) that must be inserted into the calculated polinomial]
+    
+
+    Raises:
+        TypeError: [if the `xi` is string or non-numeric iterable]
+
+    Returns:
+        [float, ndarray]: [the value of the point(s) calculated by the adjusted polinomial]
+    """
+    assert m <= len(X) - 1, 'the degree of polinomial, n, needs n+1 points'
+    assert len(X) == len(Y), 'X and Y must have the same size'
+
+    x = sp.symbols('x', real=True)
+    Y = np.array(Y, dtype=float).reshape(len(Y), -1)
+
+    fs = [x**i for i in range(m+1)]
+    fs_np = [sp.lambdify(x, f) for f in fs]
+
+    Z = [[f(i) for i in X] for f in fs_np]
+    Z = np.array(Z, dtype=float).T
+
+    b = Z.T.dot(Y)
+    A = Z.T.dot(Z)
+    A_inv = np.linalg.inv(A)
+    coefs = A_inv.dot(b)
+
+    if xi is None:
+        return coefs
+    elif isinstance(xi, (int, float, complex)) and not isinstance(xi, bool):
+        return sum([coefs[i] * xi**i for i in range(m+1)])
+    elif isinstance(xi, (list, tuple, np.ndarray)):
+        return np.array([sum([coefs[i] * xx**i for i in range(m+1)]) for xx in xi]).flatten()
+    else: 
+        raise TypeError('xi is not a number of an iterable')
+
+    return 
+
     
 
 # Gauss-Newton algorithm for non-linear regression (non optimized implementation)
-def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
+def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
     """
     x: A (n,m) array contains measured values of the independent variables. `n` is the number of measurments and 
     `m` is the number of independent variables.
@@ -391,6 +439,7 @@ def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
     vars: list. the independent variables of the model
     params: list. the parameters of the model to be adjusted
     A0: list or array. An intial guess to the parameters
+    xi: a number or numeric iterable. The point(s) that must be inserted into the calculated polinomial
 
 
     return the coeficients of the model (func)
@@ -403,6 +452,10 @@ def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
     yy = np.array([0.28, 0.57, 0.68, 0.74, 0.79])
 
     gauss_newton(xx, yy, func, [x], [a_0, a_1], [1,1])
+    or
+    gauss_newton(xx, yy, func, [x], [a_0, a_1], [1,1], 2.2)
+    or a
+    gauss_newton(xx, yy, func, [x], [a_0, a_1], [1,1], [2, 2.1, 2.2])
 
     """
     A0 = np.array(A0, dtype=np.float64)
@@ -440,7 +493,13 @@ def gauss_newton(x, y, func, vars, params, A0, tol=1e-5, max_iter=20):
 
         iteration +=1
 
-    return A
+    if xi is None:
+        return A
+    elif isinstance(xi, (int, float, list, tuple, np.ndarray)) and not isinstance(xi, bool):
+        return func_np(xi)
+    else: 
+        raise TypeError('xi is not a number of an iterable')
+
 
 # 1D Lagrange polinomial interpolation
 def lagrange_interpolation(x, y, n, xi):

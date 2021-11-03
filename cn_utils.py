@@ -425,7 +425,6 @@ def polinomial_regression(X, Y, m, xi=None):
     else: 
         raise TypeError('xi is not a number of an iterable')
 
-    return 
 
     
 

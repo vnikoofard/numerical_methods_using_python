@@ -563,3 +563,159 @@ def newton_interpolation(x, y, n, xi, return_fdd=False, return_last=True):
         return ys, errors, fdd
     else:
         return ys, errors
+
+# The first and second derivative of a univarible function
+def derivative(func, xi, n=1, h=0.001, method='center'):
+    """[The first and second derivative of a univarible function]
+
+    Args:
+        func ([function]): [the function to be derivated]
+        xi ([int, float]): [the point to calculate the derivative]
+        n (int, optional): [the order of derivation 1 or 2]. Defaults to 1.
+        h (float, optional): [the step size]. Defaults to 0.001.
+        method (str, optional): [the method of derivation: 'prog', 'reg', 'center']. Defaults to 'center'.
+
+    Returns:
+        [float]: [the derivative of the `func` at point `xi`]
+    """
+
+    if n == 1:
+        if method == 'center':
+            return (func(xi + h) - func(xi - h))/(2*h)
+        elif method == 'prog':
+            return (func(xi + h) - func(xi))/(h)
+        elif method == 'reg':
+            return (func(xi) - func(xi - h))/(h)
+        else:
+            print('Please choose one of the following methods: center, prog, reg')
+
+    elif n == 2:
+        if method == 'center':
+            return (func(xi + h) - 2*func(xi) + func(xi - h))/(h**2)
+        elif method == 'prog':
+            return (func(xi + 2*h) - 2 * func(xi + h) - func(xi))/(h)
+        elif method == 'reg':
+            return (func(xi) - 2*func(xi - h) + func(xi - 2*h))/(h)
+        else:
+            print('Please choose one of the following methods: center, prog, reg')
+
+# integration using multiple application of trapezoidal method
+def trapezoidal(func, a, b, n=1):
+    """integration using multiple application of trapezoidal method
+
+    Args:
+        func (function): the function to be integrated
+        a (float): the inferior limit
+        b (float): the superior limit
+        n (int, optional): the number of intervals. Defaults to 2.
+
+    Returns:
+        float: the value of the integration
+    """
+    assert a < b, 'the inferior limit must be less than superior one'
+    h = (b - a)/n
+    xi = np.linspace(a, b, n+1)
+    return h/2*(func(xi[0]) + 2 * sum(map(func, xi[1:-1])) + func(xi[-1]))
+
+
+# integration of a uivariate function using multiple application of Simpson 1/3 method
+def simpson13(func, a, b, n=2):
+    """integration of a uivariate function using multiple application of Simpson 1/3 method
+
+    Args:
+        func (function): the function to be integrated
+        a (float): the inferior limit
+        b (float): the superior limit
+        n (int, optional): the number of intervals. Defaults to 2.
+
+    Returns:
+        float: the value of the integration
+    """
+
+    assert a < b, "The inferior limit must be less than the superior one"
+    assert n > 1, "The simpson 1/3 needs at least 3 points, n = points - 1"
+    assert n % 2 == 0, "The simpson 1/3 works only for par number of segments "
+
+    xi = np.linspace(a, b, n+1)
+    return ((b - a)/(3*n))*(func(xi[0]) + 4 * sum(func(xi[1:-1:2])) \
+           + 2 * sum(func(xi[2:-2:2])) + func(xi[-1]))
+
+
+#integration of a function given four points using Simpson 3/8 method
+def _simpson38(func, xi):
+    """integration of a function given four points using Simpson 3/8 method
+
+    Args:
+        func (function): the function to be integrated
+        xi (list, tuple or array): a list of four points to insert into the function for integration
+
+    Returns:
+        float: the value of the integration
+    """
+
+    assert len(xi) == 4,  "This version is designed only for 4 points integration"
+
+    h = xi[1] - xi[0]
+    return 3*h/8 *(f(xi[0]) + 3 * (f(xi[1]) + f(xi[2])) + f(xi[-1]))
+    
+
+# integration of a uivariate function using multiple application of Simpson 1/3 method
+def simpson38(func, a, b, n=3):
+    """integration of a uivariate function using multiple application of Simpson 1/3 method
+
+    Args:
+        func (function): the function to be integrated
+        a (float): the inferior limit
+        b (float): the superior limit
+        n (int, optional): the number of intervals. Defaults to 2.
+
+    Returns:
+        float: the value of the integration
+    """
+
+    assert a < b, "The inferior limit must be less than the superior one"
+    assert n > 2, "The simpson 3/8 needs at least 4 points, n = points - 1"
+    assert n % 3 == 0, "The simpson 3/8 works only for the multiple of three segments "
+
+    xi = np.linspace(a, b, n+1)
+    not_multi_3 = []
+    multi_3 = []
+    for idx in range(1,n):
+        if idx % 3 != 0:
+            not_multi_3.append((idx))
+        else:
+            multi_3.append((idx))
+    print(not_multi_3, multi_3)
+    print(xi)
+
+    not_multi_3 = xi[not_multi_3]
+    multi_3 = xi[multi_3]    
+    return (3*(b - a)/(8*n))*(func(xi[0]) + 3 * sum(func(not_multi_3)) \
+        + 2 * sum(func(multi_3)) + func(xi[-1]))
+
+# integration using a mixture of Simpson 1/3 and 3/8
+def integrate(func, a, b, n=2):
+    """integration using a mixture of Simpson 1/3 and 3/8. 
+    The preference is using the Simpson 1/3.
+
+    Args:
+        func (function): the function to be integrated
+        a (float): the inferior limit
+        b (float): the superior limit
+        n (int, optional): the number of intervals. Defaults to 2.
+
+    Returns:
+        float: the value of the integration
+    """
+    assert a < b, 'the inferior limit must be less than the superior'
+    
+    xi = np.linspace(a, b, n+1)
+    if n == 1:
+        return trapezoidal(func, a, b)
+    elif n % 2 == 0:
+        return simpson13(func, a, b, n)
+    elif n == 3:
+        return _simpson38(func, xi)
+    else:
+        h = (b - a)/n
+        return _simpson38(func, xi[-4:]) + simpson13(func, a, b-3*h, n-3 )

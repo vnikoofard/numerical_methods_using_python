@@ -685,8 +685,6 @@ def simpson38(func, a, b, n=3):
             not_multi_3.append((idx))
         else:
             multi_3.append((idx))
-    print(not_multi_3, multi_3)
-    print(xi)
 
     not_multi_3 = xi[not_multi_3]
     multi_3 = xi[multi_3]    

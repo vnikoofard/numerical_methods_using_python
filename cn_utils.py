@@ -413,7 +413,7 @@ def polinomial_regression(X, Y, m, xi=None):
 
     b = Z.T.dot(Y)
     A = Z.T.dot(Z)
-    A_inv = np.linalg.inv(A)
+    A_inv = np.linalg.pinv(A)
     coefs = A_inv.dot(b)
 
     if xi is None:
@@ -484,7 +484,7 @@ def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
         func_np = sp.lambdify(vars, func_new)
         D = y - np.array([func_np(*i) for i in x])
         
-        DeltaA = np.linalg.inv(ZT.dot(Z)).dot(ZT.dot(D))
+        DeltaA = np.linalg.pinv(ZT.dot(Z)).dot(ZT.dot(D))
         A_old = A.copy()
         A += DeltaA
 

@@ -593,9 +593,9 @@ def derivative(func, xi, n=1, h=0.001, method='center'):
         if method == 'center':
             return (func(xi + h) - 2*func(xi) + func(xi - h))/(h**2)
         elif method == 'prog':
-            return (func(xi + 2*h) - 2 * func(xi + h) - func(xi))/(h)
+            return (func(xi + 2*h) - 2 * func(xi + h) - func(xi))/(h**2)
         elif method == 'reg':
-            return (func(xi) - 2*func(xi - h) + func(xi - 2*h))/(h)
+            return (func(xi) - 2*func(xi - h) + func(xi - 2*h))/(h**2)
         else:
             print('Please choose one of the following methods: center, prog, reg')
 

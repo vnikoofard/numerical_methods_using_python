@@ -656,7 +656,7 @@ def _simpson38(func, xi):
     assert len(xi) == 4,  "This version is designed only for 4 points integration"
 
     h = xi[1] - xi[0]
-    return 3*h/8 *(f(xi[0]) + 3 * (f(xi[1]) + f(xi[2])) + f(xi[-1]))
+    return 3*h/8 *(func(xi[0]) + 3 * (func(xi[1]) + func(xi[2])) + func(xi[-1]))
     
 
 # integration of a uivariate function using multiple application of Simpson 1/3 method

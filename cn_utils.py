@@ -280,6 +280,28 @@ def gauss_elimination_minimal(A, b):
         xs[i] = sum / mat[i,i]
 
     return xs
+# I'm not sure about this implementation. 
+def gauss_jordan(MAT1, MAT2):
+
+
+    mat = np.concatenate([MAT1, MAT2.reshape(-1,1)], axis=1)
+    for idx_i in range(0, len(mat)-1):
+        for idx_j in range(idx_i+1, len(mat)):
+            factor = mat[idx_j, idx_i] / mat[idx_i, idx_i] 
+            mat[idx_j] = mat[idx_j] - factor * mat[idx_i]
+
+    n = len(MAT1)-1
+    xs = np.zeros(len(MAT1))
+    xs[-1] = mat[n,n+1]/mat[n,n]
+
+    for i in range(n-1, -1, -1):
+        sum = mat[i, -1]
+        for j in range(0, len(MAT1)):
+            sum -= mat[i, j]* xs[j]
+        xs[i] = sum / mat[i,i]
+
+    return xs
+
 
 # LU decomposion using gauss elimination
 def decompose(A):

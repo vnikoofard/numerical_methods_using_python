@@ -3,6 +3,8 @@ import math
 import sympy as sp
 #import jax
 import plotly.graph_objects as go
+import sys
+
 
 x, y, z, a = sp.symbols('x y z a')
 
@@ -739,3 +741,157 @@ def integrate(func, a, b, n=2):
     else:
         h = (b - a)/n
         return _simpson38(func, xi[-4:]) + simpson13(func, a, b-3*h, n-3 )
+
+
+# a utility function for solving a system of ODEs with RK4. This function takes one step
+def _RK4(funcs, xi, yis, h):
+
+    yis = np.array(yis)
+
+    k1 = np.array([func(xi, *yis) for func in funcs])
+
+    ym = yis + k1*h/2
+
+    k2 = np.array([func(xi+h/2, *ym) for func in funcs])
+
+    ym = yis + k2*h/2
+
+    k3 = np.array([func(xi+h/2, *ym) for func in funcs])
+
+    ye = yis + k3*h
+
+    k4 = np.array([func(xi+h, *ye) for func in funcs])
+
+    
+    slope = (k1 + 2*(k2 + k3) + k4)/6 
+
+    yis += slope * h
+    xi += h
+
+    return xi, yis
+
+# A solver for a system of ODEs using the fourth order Runge-Kutta algorithm
+def RK4sys(funcs, interval, yis, h=0.1):
+    """Solving a system of ODEs using the fourth order Runge-Kutta method.
+
+    Args:
+        funcs (list of callable): the right hand side of the ODEs in the form dyi/dx = fi(x,yis). Here `func` is `f(x,y)`
+        interval (array-like with two element): the initial and final point (x0, xf)
+        yis (list of int or float): the value of the functions at the initial point yi=yi(x0)
+        h (float, optional): initial step size. Defaults to 0.5.
+
+    Returns:
+        tuple: a tuple with two lists containing the solution and the points. The second element is the
+        of the tuple is an array containing the solution of y1, y2,..., yn in each step
+    """
+    xi, xf = interval
+    X = [xi]
+    Y = [yis]
+    while X[-1] < xf:
+        xi, yis = _RK4(funcs, xi, yis, h)
+        X.append(xi)
+        Y.append(yis)
+
+    
+    return X, Y
+
+
+
+
+
+
+# RK Cash-Karp. This function takes just one step
+
+def _RKkc_step(func, xi, yi, h):
+    a1 = 37/378
+    a3 = 250/621
+    a4 = 125/594
+    a6 = 512/1771
+    b1 = 2825/27648
+    b3 = 18575/48384
+    b4 = 13525/55296
+    b5 = 277/14336
+    b6 = 1/4
+
+    k1 = func(xi, yi)
+    k2 = func(xi + h/5, yi+(k1*h)/5)
+    k3 = func(xi + 0.3*h, yi+(3*k1*h)/40 + (9*k2*h)/40)
+    k4 = func(xi + 0.6*h, yi+0.3*k1*h - 0.9*k2*h + 1.2*k3*h)
+    k5 = func(xi + h, yi - (11*k1*h)/54 + 2.5*k2*h - (70*k3*h)/27 + (35*k4*h)/27)
+    k6 = func(xi + 7*h/8, (1631*k1*h)/55296 + (175*k2*h)/512 \
+        + (575*k3*h)/13824 + (44275/110592)*k4*h + (253/4096)*k5*h)
+    
+    y4 = yi + (a1*k1 + a3*k3 + a4*k4 + a6*k6)*h
+    y5 = yi + (b1*k1 + b3*k3 + b4*k4 + b5*k5 + b6*k6)*h  #yout
+    yerr = y5 - y4
+    #print(k1,k2,k3,k4,k5,k6)
+    return y5, yerr
+
+# adaptive step for RK Cash-Karp
+def adapt(func, x, y, h, yscale, eps):
+    safety = 0.9
+    econ=1.89e-4
+    ytemp, yerr = _RKkc_step(func, x, y, h)
+    emax = abs(yerr/(yscale*eps))
+    #print(emax)
+    if emax > 1: 
+        #print('exit')
+        #sys.exit(0)
+
+        htemp = safety*h*emax**(-0.25)
+        h = max(abs(htemp), 0.25*abs(h))
+        xnew = x + h
+        if xnew == x:
+            print('The solver is not moving')
+            sys.exit(0)
+    if emax > econ:
+        hnxt = safety*emax**(-0.2)*h
+    else:
+        hnxt = 4 * h
+    
+    x += h
+    #print(h)
+    return x, ytemp, hnxt
+
+# the main program for RK Cash-Karp that uses `_RKkc_step` and `adapt`
+def RKkc(func, interval, y0, maxstep=100, h=0.5, tiny=1e-30,eps=5e-5):
+    """Solving an ODE problem using Runge-Kutta Cash-Karp algorithm.
+
+    Args:
+        func (callable): the right hand side of the ODE in the form dy/dx = f(x,y). Here `func` is `f(x,y)`
+        interval (array-like with two element): the initial and final point (x0, xf)
+        y0 (int or float): the value of the function at the initial point y0=y(x0)
+        maxstep (int, optional): the maximum of the iteration. Defaults to 100.
+        h (float, optional): initial step size. Defaults to 0.5.
+        tiny (_type_, optional): a tiny value to prevent division by zero. Defaults to 1e-30.
+        eps (_type_, optional): a small value to control the step size. Defaults to 5e-5.
+
+    Returns:
+        tuple: a tuple with two lists containing the solution and the points.
+    """
+    x, xf = interval
+    y = y0
+    istep = 0
+    xs = [x]
+    ys = [y]
+
+
+    while True:
+        if istep > maxstep and x <= xf:
+            break
+
+        istep += 1
+
+        dy = func(x, y)
+
+        yscale = abs(y) + abs(h*dy) + tiny
+
+        if (x+h)>xf:
+            h = xf - x
+        x, y, h = adapt(func, x, y, h, yscale, eps)
+        #print(x, y)
+        #print(istep)
+        xs.append(x)
+        ys.append(y)
+
+    return xs, ys

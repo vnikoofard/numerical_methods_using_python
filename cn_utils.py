@@ -743,7 +743,7 @@ def integrate(func, a, b, n=2):
         return _simpson38(func, xi[-4:]) + simpson13(func, a, b-3*h, n-3 )
 
 
-# a utility function for solving a system of ODEs with RK4. This function takes one step
+# a helper function for solving a system of ODEs with RK4. This function takes one step
 def _RK4(funcs, xi, yis, h):
 
     yis = np.array(yis)
@@ -792,7 +792,6 @@ def RK4sys(funcs, interval, yis, h=0.1):
         X.append(xi)
         Y.append(yis)
 
-    
     return X, Y
 
 
@@ -800,7 +799,7 @@ def RK4sys(funcs, interval, yis, h=0.1):
 
 
 
-# RK Cash-Karp. This function takes just one step
+# Helper RK Cash-Karp. This function takes just one step
 
 def _RKkc_step(func, xi, yi, h):
     a1 = 37/378

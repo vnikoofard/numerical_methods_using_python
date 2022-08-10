@@ -889,3 +889,47 @@ def RKkc(func, interval, y0, maxstep=100, h=0.5, tiny=1e-30,eps=5e-5):
         ys.append(y)
 
     return xs, ys
+
+# To normalize a vector. It is needed to find the highest and lowest eigenvalues of a system
+def normalize(x):
+    """Normalize a vector
+
+    Args:
+        x (ndarray): the vector (numpy array)to normal. 
+
+    Returns:
+        tuple: the normalization factor and the normalized vector
+    """
+    fac = x.max()
+    #fac = abs(x).max()
+    x_n = x / fac
+    return fac, x_n
+
+# Find the highest eigenvalue of a matrix
+def power_method(A, x0, tol=1e-5, max_iter=100):
+    """Find the highest eigenvalue of a matrix based on the Hotelling method
+
+    Args:
+        A (ndarray): The nxn matrix as a numpy array
+        x0 (ndarray): the initial guess for the highest eigenvector
+        tol (float, optional): the tolerance for the error. Defaults to 1e-5.
+        max_iter (int, optional): max iteration. Defaults to 100.
+
+    Returns:
+        tuple: highest eigenvalue and associated eigenvector
+    """
+    iteration = 0
+    error = 1000
+    lambda_1, x0 = normalize(x0)
+
+    while error > tol and iteration<max_iter:
+        lambda_old = lambda_1
+        x0 = np.dot(A, x0)
+        lambda_1, x0 = normalize(x0)
+        iteration += 1
+
+        error = abs(lambda_1 - lambda_old)
+
+
+    return lambda_1, x0
+

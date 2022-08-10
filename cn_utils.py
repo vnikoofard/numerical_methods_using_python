@@ -794,11 +794,6 @@ def RK4sys(funcs, interval, yis, h=0.1):
 
     return X, Y
 
-
-
-
-
-
 # Helper RK Cash-Karp. This function takes just one step
 
 def _RKkc_step(func, xi, yi, h):

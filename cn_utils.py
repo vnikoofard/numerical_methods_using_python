@@ -743,6 +743,41 @@ def integrate(func, a, b, n=2):
         return _simpson38(func, xi[-4:]) + simpson13(func, a, b-3*h, n-3 )
 
 
+# a helper function for solving a system of ODEs with simple Euler. This function takes one step
+def _Euler(funcs, xi, yis, h):
+    n = len(funcs)
+    y = []
+    for i in range(n):
+        y.append(yis[i] + funcs[i](xi, *yis)*h)
+    return y
+        
+
+def EulerSys(funcs, interval, yis, h):
+    """Solving a system of ODEs using the Euler method.
+
+    Args:
+        funcs (list of callable): the right hand side of the ODEs in the form dyi/dx = fi(x,yis). Here `func` is `f(x,y)`
+        interval (array-like with two element): the initial and final point (x0, xf)
+        yis (list of int or float): the value of the functions at the initial point yi=yi(x0)
+        h (float, optional): initial step size. Defaults to 0.5.
+
+    Returns:
+        tuple: a tuple with two lists containing the solution and the points. The second element is the
+        of the tuple is an array containing the solution of y1, y2,..., yn in each step
+    """
+    assert len(funcs) == len(yis), "yis and funcs must have the same size"
+    xi, xf = interval
+    X = [xi]
+    Y = [yis]
+    while xi < xf:
+        y = _Euler(funcs, xi, Y[-1], h)
+        Y.append(y)
+        X.append(xi)
+        xi += h
+    return X, Y
+
+
+
 # a helper function for solving a system of ODEs with RK4. This function takes one step
 def _RK4(funcs, xi, yis, h):
 

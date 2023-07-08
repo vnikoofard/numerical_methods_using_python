@@ -1,48 +1,52 @@
 import numpy as np
 import math
 import sympy as sp
-#import jax
+
+# import jax
 import plotly.graph_objects as go
 import sys
 
 
-x, y, z, a = sp.symbols('x y z a')
+x, y, z, a = sp.symbols("x y z a")
+
 
 def dec2bin(x):
     """
     Takes a number is the decimal format a return the number in binary format as a string
     """
-    binary = ''
+    binary = ""
     while x > 1:
-        binary = str(x%2) + binary
-        x = x//2
+        binary = str(x % 2) + binary
+        x = x // 2
     return str(x) + binary
 
-def bin2dec(x):
-  """
-  x: Takes a binary number in the string format
-  """
-  res = 0
-  l = list(x)
-  for idx, item in enumerate(l):
-    res += int(item)* 2**(len(l)-idx - 1)
 
-  return res
+def bin2dec(x):
+    """
+    x: Takes a binary number in the string format
+    """
+    res = 0
+    l = list(x)
+    for idx, item in enumerate(l):
+        res += int(item) * 2 ** (len(l) - idx - 1)
+
+    return res
 
 
 # Taylor expansion of a funtion
 def taylor_expansion(func, x0, order):
     """
-    func: a sympy univariable function with x as its argument. 
+    func: a sympy univariable function with x as its argument.
     order: the order of expansion
     -----
-    returns the expansion of the `func` around the point `a` at the order `order` 
+    returns the expansion of the `func` around the point `a` at the order `order`
     """
     series = 0
-    for i in range(order+1):
-        series += (func.diff(x, i).subs(x,x0)/sp.factorial(i))*(x-x0)**i
-    
+    for i in range(order + 1):
+        series += (func.diff(x, i).subs(x, x0) / sp.factorial(i)) * (x - x0) ** i
+
     return series
+
 
 # Bisection method
 def bisection(func, xl, xu, tol=1e-3, max_iter=100):
@@ -53,16 +57,16 @@ def bisection(func, xl, xu, tol=1e-3, max_iter=100):
     tolerance: desired erro for termination
     max_iter: maximum iteration before stop
     """
-    assert func(xu) * func(xl) < 0, 'func(xu) * func(xl) must be a negative value'
+    assert func(xu) * func(xl) < 0, "func(xu) * func(xl) must be a negative value"
 
     iter = 0
-    error = abs((xu-xl)/xu) * 100
-    xr = (xl + xu)/2 + 0.1 * (xl + xu)/2
+    error = abs((xu - xl) / xu) * 100
+    xr = (xl + xu) / 2 + 0.1 * (xl + xu) / 2
 
     while error > tol and iter < max_iter:
         xr_old = xr
-        xr = (xl + xu)/2
-        
+        xr = (xl + xu) / 2
+
         f_xr = func(xr)
         f_xl = func(xl)
 
@@ -72,15 +76,17 @@ def bisection(func, xl, xu, tol=1e-3, max_iter=100):
             xl = xr
         else:
             return xr
-            
-        error = abs((xr-xr_old)/xr) * 100
-        #print('xr', xr, 'error', error)
+
+        error = abs((xr - xr_old) / xr) * 100
+        # print('xr', xr, 'error', error)
 
         iter += 1
 
     return xr, error
 
+
 # Modified False Position
+
 
 def false_position(func, xl, xu, tol=1e-3, max_iter=100):
     """
@@ -91,16 +97,14 @@ def false_position(func, xl, xu, tol=1e-3, max_iter=100):
     max_iter: maximum iteration before stop
     """
     iteration = 0
-    iu= il = 0
-    error = abs((xu-xl)/xu) * 100
-    xr = (xl + xu)/2 + 0.1 * (xl + xu)/2
+    iu = il = 0
+    error = abs((xu - xl) / xu) * 100
+    xr = (xl + xu) / 2 + 0.1 * (xl + xu) / 2
     f_xu = func(xu)
     f_xl = func(xl)
     while error > tol and iteration < max_iter:
-        
-        
         xr_old = xr
-        xr = xu - (f_xu*(xl-xu))/(f_xl - f_xu)
+        xr = xu - (f_xu * (xl - xu)) / (f_xl - f_xu)
         f_xr = func(xr)
 
         test = f_xr * f_xl
@@ -110,24 +114,25 @@ def false_position(func, xl, xu, tol=1e-3, max_iter=100):
             f_xu = func(xu)
             iu = 0
             il = il + 1
-            if il >= 2: 
+            if il >= 2:
                 f_xl /= 2
         elif test > 0:
             xl = xr
             f_xl = func(xl)
             il = 0
             iu = iu + 1
-            if iu >=2:
+            if iu >= 2:
                 f_xu /= 2
         else:
             return xr
-        
-        error = abs((xr-xr_old)/xr) * 100
-        print('xr', xr, 'error', error)
+
+        error = abs((xr - xr_old) / xr) * 100
+        print("xr", xr, "error", error)
 
         iteration += 1
-    
+
     return xr, error
+
 
 # Iteration of fix point
 def fix_point(func, x0, tol=1e-3, max_iter=100):
@@ -142,14 +147,16 @@ def fix_point(func, x0, tol=1e-3, max_iter=100):
     error = 100
     while error > tol and iteration <= max_iter:
         x_new = func(x_i)
-        error = abs((x_new - x_i)/x_new) * 100
-        #print(f'x_new é {x_new} e o erro é {abs(error)}')
+        error = abs((x_new - x_i) / x_new) * 100
+        # print(f'x_new é {x_new} e o erro é {abs(error)}')
         x_i = x_new
         iteration += 1
-    
+
     return x_new, error
 
+
 # A modified version of Newton-Raphson
+
 
 def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
     """
@@ -167,9 +174,9 @@ def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
     f_xl = func(xl)
     f_xu = func(xu)
 
-    assert f_xl * f_xu < 0,  'Root is not bracketed'
+    assert f_xl * f_xu < 0, "Root is not bracketed"
 
-    x = 0.5*(xl + xu)
+    x = 0.5 * (xl + xu)
     error = 100
     iteration = 0
 
@@ -185,23 +192,24 @@ def newtonRaphson(func, dfunc, xl, xu, tol=1.0e-3, max_iter=100):
         # Try a Newton-Raphson step
         df_x = dfunc(x)
         # If division by zero, push x out of bounds
-        try: 
-            dx = -f_x/df_x
-        except ZeroDivisionError: 
+        try:
+            dx = -f_x / df_x
+        except ZeroDivisionError:
             dx = xu - xl
 
         x_new = x + dx
         # If the result is outside the brackets, use bisection
-        if (xu - x_new)*(x_new - xl) < 0.0:
-            dx = 0.5*(xu - xl)
+        if (xu - x_new) * (x_new - xl) < 0.0:
+            dx = 0.5 * (xu - xl)
             x_new = xl + dx
         # Check for convergence
-        error = abs((x_new - x)/x_new )* 100
+        error = abs((x_new - x) / x_new) * 100
 
         x = x_new
         iteration += 1
 
     return x_new, error
+
 
 # Modified secant method for calculating the root of a function
 def modifiedSecant(func, x0, delta=1e-2, tol=1e-3, max_iter=100):
@@ -217,43 +225,50 @@ def modifiedSecant(func, x0, delta=1e-2, tol=1e-3, max_iter=100):
 
     while error > tol and iteration <= max_iter:
         f = func(x0)
-        x_new = x0 - f*delta*x0/(func(x0+delta*x0) - f)
-        error = (x_new - x0)/ x_new * 100
-        #print(x_new, error)
-        x0 = x_new  
-    
+        x_new = x0 - f * delta * x0 / (func(x0 + delta * x0) - f)
+        error = (x_new - x0) / x_new * 100
+        # print(x_new, error)
+        x0 = x_new
+
     return x_new, error
+
 
 # Calculating the derminent of a 2x2 or 3x3 matrix
 def matrix_determinent(a):
-    assert a.shape[0] == a.shape[1], 'Matrix must be quadratic'
-    assert len(a) == 2 or len(a) == 3, 'The shape of matrix must be 2x2 or 3x3'
+    assert a.shape[0] == a.shape[1], "Matrix must be quadratic"
+    assert len(a) == 2 or len(a) == 3, "The shape of matrix must be 2x2 or 3x3"
 
     if len(a) == 2:
-        return a[0,0]*a[1,1] - a[0,1]*a[1,0]
+        return a[0, 0] * a[1, 1] - a[0, 1] * a[1, 0]
     if len(a) == 3:
-        return a[0,0]*matrix_determinent(a[1:,[1,2]]) - a[0,1]*matrix_determinent(a[1:,[0,2]])+\
-            a[0,2]*matrix_determinent(a[1:,[0,1]])
+        return (
+            a[0, 0] * matrix_determinent(a[1:, [1, 2]])
+            - a[0, 1] * matrix_determinent(a[1:, [0, 2]])
+            + a[0, 2] * matrix_determinent(a[1:, [0, 1]])
+        )
 
 
 # Calculating a system of three linear equations by Cramer technics
 def cramer(a, b):
-    assert a.shape[0] == a.shape[1], 'Matrix must be quadratic'
-    assert a.shape[0] == b.shape[0], 'The dimension of the matrix must the same as the vector of constants'
+    assert a.shape[0] == a.shape[1], "Matrix must be quadratic"
+    assert (
+        a.shape[0] == b.shape[0]
+    ), "The dimension of the matrix must the same as the vector of constants"
     D = matrix_determinent(a)
     temp = a.copy()
-    temp[:,0] = b
-    x1 = matrix_determinent(temp)/D
+    temp[:, 0] = b
+    x1 = matrix_determinent(temp) / D
 
     temp = a.copy()
-    temp[:,1] = b
-    x2 = matrix_determinent(temp)/D
+    temp[:, 1] = b
+    x2 = matrix_determinent(temp) / D
 
     temp = a.copy()
-    temp[:,2] = b
-    x3 = matrix_determinent(temp)/D
+    temp[:, 2] = b
+    x3 = matrix_determinent(temp) / D
 
     return x1, x2, x3
+
 
 # A minimal gauss elimination for solving a linear system
 def gauss_elimination_minimal(A, b):
@@ -263,44 +278,44 @@ def gauss_elimination_minimal(A, b):
     """
     A = np.array(A, dtype=float)
     b = np.array(b, dtype=float)
-    assert A.shape[0] == A.shape[1], 'the matrix of coefficients must be squared'
+    assert A.shape[0] == A.shape[1], "the matrix of coefficients must be squared"
 
-    mat = np.concatenate([A, b.reshape(-1,1)], axis=1)
-    for idx_i in range(0, len(mat)-1):
-        for idx_j in range(idx_i+1, len(mat)):
-            factor = mat[idx_j, idx_i] / mat[idx_i, idx_i] 
+    mat = np.concatenate([A, b.reshape(-1, 1)], axis=1)
+    for idx_i in range(0, len(mat) - 1):
+        for idx_j in range(idx_i + 1, len(mat)):
+            factor = mat[idx_j, idx_i] / mat[idx_i, idx_i]
             mat[idx_j] = mat[idx_j] - factor * mat[idx_i]
 
-    n = len(A)-1
+    n = len(A) - 1
     xs = np.zeros(len(A))
-    xs[-1] = mat[n,n+1]/mat[n,n]
+    xs[-1] = mat[n, n + 1] / mat[n, n]
 
-    for i in range(n-1, -1, -1):
+    for i in range(n - 1, -1, -1):
         sum = mat[i, -1]
         for j in range(0, len(A)):
-            sum -= mat[i, j]* xs[j]
-        xs[i] = sum / mat[i,i]
+            sum -= mat[i, j] * xs[j]
+        xs[i] = sum / mat[i, i]
 
     return xs
-# I'm not sure about this implementation. 
+
+
+# I'm not sure about this implementation.
 def gauss_jordan(MAT1, MAT2):
-
-
-    mat = np.concatenate([MAT1, MAT2.reshape(-1,1)], axis=1)
-    for idx_i in range(0, len(mat)-1):
-        for idx_j in range(idx_i+1, len(mat)):
-            factor = mat[idx_j, idx_i] / mat[idx_i, idx_i] 
+    mat = np.concatenate([MAT1, MAT2.reshape(-1, 1)], axis=1)
+    for idx_i in range(0, len(mat) - 1):
+        for idx_j in range(idx_i + 1, len(mat)):
+            factor = mat[idx_j, idx_i] / mat[idx_i, idx_i]
             mat[idx_j] = mat[idx_j] - factor * mat[idx_i]
 
-    n = len(MAT1)-1
+    n = len(MAT1) - 1
     xs = np.zeros(len(MAT1))
-    xs[-1] = mat[n,n+1]/mat[n,n]
+    xs[-1] = mat[n, n + 1] / mat[n, n]
 
-    for i in range(n-1, -1, -1):
+    for i in range(n - 1, -1, -1):
         sum = mat[i, -1]
         for j in range(0, len(MAT1)):
-            sum -= mat[i, j]* xs[j]
-        xs[i] = sum / mat[i,i]
+            sum -= mat[i, j] * xs[j]
+        xs[i] = sum / mat[i, i]
 
     return xs
 
@@ -312,20 +327,20 @@ def decompose(A):
     """
     A = np.array(A, dtype=float)
 
-    assert A.shape[0] == A.shape[1], 'the matrix of coefficients must be squared'
+    assert A.shape[0] == A.shape[1], "the matrix of coefficients must be squared"
 
     L = np.eye(len(A))
     U = A.copy()
 
     n = len(A)
-    for idx_i in range(0, n-1):
-        for idx_j in range(idx_i+1, n):
-            factor = U[idx_j, idx_i] / U[idx_i, idx_i] 
+    for idx_i in range(0, n - 1):
+        for idx_j in range(idx_i + 1, n):
+            factor = U[idx_j, idx_i] / U[idx_i, idx_i]
             U[idx_j] = U[idx_j] - factor * U[idx_i]
             L[idx_j, idx_i] = factor
-    
 
     return L, U
+
 
 # A minimal Gauss-Seidel for linear systems
 def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20, return_error=False):
@@ -340,25 +355,27 @@ def gauss_seidel(A, b, x0, tol=1e-5, max_iter=20, return_error=False):
     b = np.array(b, dtype=float)
 
     n = len(A)
-    assert len(x0) == n, 'the size of initial guess must be the same as the system'
-    assert all([A[i,i] != 0 for i in range(n)]), 'There is a zero in the diagonal of the matrix'
+    assert len(x0) == n, "the size of initial guess must be the same as the system"
+    assert all(
+        [A[i, i] != 0 for i in range(n)]
+    ), "There is a zero in the diagonal of the matrix"
     iteration = 0
     x_old = xs = np.array(x0, dtype=np.float64)
-    error = np.ones(n)*100
+    error = np.ones(n) * 100
 
     while max(np.abs(error)) > tol and iteration < max_iter:
-        
         for i in range(n):
-            xs[i] = (b[i] - sum(np.delete(xs, i) * np.delete(A[i, :], i)))/A[i, i]
-            error[i] = np.abs((xs[i] - x_old[i])/ xs[i])*100
+            xs[i] = (b[i] - sum(np.delete(xs, i) * np.delete(A[i, :], i))) / A[i, i]
+            error[i] = np.abs((xs[i] - x_old[i]) / xs[i]) * 100
             x_old = xs.copy()
-        
+
         iteration += 1
-    
+
     if return_error:
         return xs, error
     else:
         return xs
+
 
 # Chlesky decomposition for symmetric matrices
 def cholesky(A):
@@ -367,18 +384,18 @@ def cholesky(A):
     Return: L and its transpose such that L.dot(L.T) = A
     """
     A = np.array(A, dtype=float)
-    assert A.shape[0] == A.shape[1], 'The matrix must be square'
-    assert (A.T == A).all(), 'The matrix must be symmetric'
-    
+    assert A.shape[0] == A.shape[1], "The matrix must be square"
+    assert (A.T == A).all(), "The matrix must be symmetric"
+
     L = np.zeros(A.shape)
 
     for i in range(len(A)):
-        for j in range(i+1):
+        for j in range(i + 1):
             if i == j:
-                L[i, j] = np.sqrt(A[i, j] - sum(L[i, :i]**2))
+                L[i, j] = np.sqrt(A[i, j] - sum(L[i, :i] ** 2))
             else:
-                L[i, j] = (A[i, j] - sum(L[j, :j] * L[i, :j])) / L[j,j]
-    
+                L[i, j] = (A[i, j] - sum(L[j, :j] * L[i, :j])) / L[j, j]
+
     return L, L.T
 
 
@@ -393,29 +410,30 @@ def linear_regression(x, y):
     y = np.array(y, dtype=np.float64)
 
     n = len(x)
-    xy = sum(x*y)
+    xy = sum(x * y)
     x_2 = sum(x**2)
-    x_bar = x.sum()/n
-    y_bar = y.sum()/n
-    
-    #a0: interseção, a1:inclinação
-    a1 = (n * xy - x.sum() * y.sum())/(n * x_2 - x.sum()**2)
+    x_bar = x.sum() / n
+    y_bar = y.sum() / n
+
+    # a0: interseção, a1:inclinação
+    a1 = (n * xy - x.sum() * y.sum()) / (n * x_2 - x.sum() ** 2)
     a0 = y_bar - a1 * x_bar
 
     return a0, a1
 
+
 # 1D polinomial Regression
 def polinomial_regression(X, Y, m, xi=None):
-    """This function does a m-degree polinomial regression using the procedure 
-    in the section 17.4 page 479 on the Numerical Methods for Engineers, 
+    """This function does a m-degree polinomial regression using the procedure
+    in the section 17.4 page 479 on the Numerical Methods for Engineers,
     by Chapra, seventh edition
 
     Args:
-        X (numeric iterable): [the independent measurments] 
+        X (numeric iterable): [the independent measurments]
         Y ([numeric iterable]): [the dependent measurments]
         m ([int]): [the degree on the polinomial to adjust]
         xi ([a number of numeric iterable]): [the point(s) that must be inserted into the calculated polinomial]
-    
+
 
     Raises:
         TypeError: [if the `xi` is string or non-numeric iterable]
@@ -423,13 +441,13 @@ def polinomial_regression(X, Y, m, xi=None):
     Returns:
         [float, ndarray]: [the value of the point(s) calculated by the adjusted polinomial]
     """
-    assert m <= len(X) - 1, 'the degree of polinomial, n, needs n+1 points'
-    assert len(X) == len(Y), 'X and Y must have the same size'
+    assert m <= len(X) - 1, "the degree of polinomial, n, needs n+1 points"
+    assert len(X) == len(Y), "X and Y must have the same size"
 
-    x = sp.symbols('x', real=True)
+    x = sp.symbols("x", real=True)
     Y = np.array(Y, dtype=float).reshape(len(Y), -1)
 
-    fs = [x**i for i in range(m+1)]
+    fs = [x**i for i in range(m + 1)]
     fs_np = [sp.lambdify(x, f) for f in fs]
 
     Z = [[f(i) for i in X] for f in fs_np]
@@ -443,21 +461,21 @@ def polinomial_regression(X, Y, m, xi=None):
     if xi is None:
         return coefs
     elif isinstance(xi, (int, float, complex)) and not isinstance(xi, bool):
-        return sum([coefs[i] * xi**i for i in range(m+1)])
+        return sum([coefs[i] * xi**i for i in range(m + 1)])
     elif isinstance(xi, (list, tuple, np.ndarray)):
-        return np.array([sum([coefs[i] * xx**i for i in range(m+1)]) for xx in xi]).flatten()
-    else: 
-        raise TypeError('xi is not a number of an iterable')
+        return np.array(
+            [sum([coefs[i] * xx**i for i in range(m + 1)]) for xx in xi]
+        ).flatten()
+    else:
+        raise TypeError("xi is not a number of an iterable")
 
-
-    
 
 # Gauss-Newton algorithm for non-linear regression (non optimized implementation)
 def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
     """
-    x: A (n,m) array contains measured values of the independent variables. `n` is the number of measurments and 
+    x: A (n,m) array contains measured values of the independent variables. `n` is the number of measurments and
     `m` is the number of independent variables.
-    y: A (n, 1) array contains the measured values of the dependent variable. 
+    y: A (n, 1) array contains the measured values of the dependent variable.
     func: a sympy function with symbolic variables
     vars: list. the independent variables of the model
     params: list. the parameters of the model to be adjusted
@@ -482,22 +500,25 @@ def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
 
     """
     A0 = np.array(A0, dtype=np.float64)
-    x = np.array(x, dtype=float).reshape(-1,1)
+    x = np.array(x, dtype=float).reshape(-1, 1)
     m = x.shape[1]
-    
 
-    assert len(vars) == m, 'The number of independent variables must be the same as the columns of data'
-    assert len(params) == len(A0), 'The number of initial values must be the same as the number of parameters'
+    assert (
+        len(vars) == m
+    ), "The number of independent variables must be the same as the columns of data"
+    assert len(params) == len(
+        A0
+    ), "The number of initial values must be the same as the number of parameters"
 
     # creating a list of derivatives
-    
+
     iteration = 1
-    error = np.ones(len(params))*100
+    error = np.ones(len(params)) * 100
     A = A_old = A0
 
     while max(error) > tol and iteration <= max_iter:
-        param_val = {p:v for p,v in zip(params, A)}
-        
+        param_val = {p: v for p, v in zip(params, A)}
+
         dfuncs = [func.diff(var).subs(param_val) for var in params]
         dfuncs_np = [sp.lambdify(vars, dfunc) for dfunc in dfuncs]
 
@@ -507,22 +528,23 @@ def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
         func_new = func.subs(param_val)
         func_np = sp.lambdify(vars, func_new)
         D = y - np.array([func_np(*i) for i in x])
-        
+
         DeltaA = np.linalg.pinv(ZT.dot(Z)).dot(ZT.dot(D))
         A_old = A.copy()
         A += DeltaA
 
-        error =  np.abs((A - A_old)/A)*100
+        error = np.abs((A - A_old) / A) * 100
 
-
-        iteration +=1
+        iteration += 1
 
     if xi is None:
         return A
-    elif isinstance(xi, (int, float, list, tuple, np.ndarray)) and not isinstance(xi, bool):
+    elif isinstance(xi, (int, float, list, tuple, np.ndarray)) and not isinstance(
+        xi, bool
+    ):
         return func_np(xi)
-    else: 
-        raise TypeError('xi is not a number of an iterable')
+    else:
+        raise TypeError("xi is not a number of an iterable")
 
 
 # 1D Lagrange polinomial interpolation
@@ -530,56 +552,55 @@ def lagrange_interpolation(x, y, n, xi):
     """
     x: a list of independent variables
     y: a list of dependent variables
-    n: degree of polinomial 
+    n: degree of polinomial
     xi: the point of interest to calculate f(xi)
     """
 
-    assert len(x) == len(y), 'The same size'
-    assert len(x) > n, 'for the n-degree interpolation n+1 points are needed'
+    assert len(x) == len(y), "The same size"
+    assert len(x) > n, "for the n-degree interpolation n+1 points are needed"
 
     sum = 0
-    for i in range(n+1):
+    for i in range(n + 1):
         product = y[i]
-        for j in range(n+1):
+        for j in range(n + 1):
             if i != j:
-                product *= (xi - x[j])/(x[i] - x[j])
+                product *= (xi - x[j]) / (x[i] - x[j])
         sum += product
-    
+
     return sum
+
 
 # 1D Newton interpolation
 def newton_interpolation(x, y, n, xi, return_fdd=False, return_last=True):
     """
     x: a list of independent variables
     y: a list of dependent variables
-    n: degree of polinomial 
+    n: degree of polinomial
     xi: the point of interest to calculate f(xi)
     return_fdd: if True will return the finite divided-diference terms
     return_last: if False will return all of the approximation of f(xi) with polinomials lower than `n`
     """
 
-    assert len(x) == len(y), 'the same size'
-    assert len(x) > n, 'for the n-degree interpolation n+1 points are needed'
-    
+    assert len(x) == len(y), "the same size"
+    assert len(x) > n, "for the n-degree interpolation n+1 points are needed"
+
     n += 1
     fdd = np.zeros((len(y), len(y)))
     fdd[:, 0] = y
 
     for j in range(1, n):
-        for i in range(0, n-j):
-            fdd[i, j] = (fdd[i+1, j-1] - fdd[i, j-1])/(x[i+j] - x[i])
+        for i in range(0, n - j):
+            fdd[i, j] = (fdd[i + 1, j - 1] - fdd[i, j - 1]) / (x[i + j] - x[i])
 
-    
-    
-    errors = np.zeros(n-1)
+    errors = np.zeros(n - 1)
     ys = np.zeros(n)
     ys[0] = y[0]
     xterm = 1
     for i in range(1, n):
-        xterm *= xi - x[i-1]
-        ys[i] = (ys[i-1] + xterm * fdd[0, i])
-        errors[i-1] = fdd[0, i] * xterm
-    
+        xterm *= xi - x[i - 1]
+        ys[i] = ys[i - 1] + xterm * fdd[0, i]
+        errors[i - 1] = fdd[0, i] * xterm
+
     if return_last:
         return ys[-1], errors[-1]
 
@@ -588,8 +609,9 @@ def newton_interpolation(x, y, n, xi, return_fdd=False, return_last=True):
     else:
         return ys, errors
 
+
 # The first and second derivative of a univarible function
-def derivative(func, xi, n=1, h=0.001, method='center'):
+def derivative(func, xi, n=1, h=0.001, method="center"):
     """[The first and second derivative of a univarible function]
 
     Args:
@@ -604,24 +626,25 @@ def derivative(func, xi, n=1, h=0.001, method='center'):
     """
 
     if n == 1:
-        if method == 'center':
-            return (func(xi + h) - func(xi - h))/(2*h)
-        elif method == 'prog':
-            return (func(xi + h) - func(xi))/(h)
-        elif method == 'reg':
-            return (func(xi) - func(xi - h))/(h)
+        if method == "center":
+            return (func(xi + h) - func(xi - h)) / (2 * h)
+        elif method == "prog":
+            return (func(xi + h) - func(xi)) / (h)
+        elif method == "reg":
+            return (func(xi) - func(xi - h)) / (h)
         else:
-            print('Please choose one of the following methods: center, prog, reg')
+            print("Please choose one of the following methods: center, prog, reg")
 
     elif n == 2:
-        if method == 'center':
-            return (func(xi + h) - 2*func(xi) + func(xi - h))/(h**2)
-        elif method == 'prog':
-            return (func(xi + 2*h) - 2 * func(xi + h) + func(xi))/(h**2)
-        elif method == 'reg':
-            return (func(xi) - 2*func(xi - h) + func(xi - 2*h))/(h**2)
+        if method == "center":
+            return (func(xi + h) - 2 * func(xi) + func(xi - h)) / (h**2)
+        elif method == "prog":
+            return (func(xi + 2 * h) - 2 * func(xi + h) + func(xi)) / (h**2)
+        elif method == "reg":
+            return (func(xi) - 2 * func(xi - h) + func(xi - 2 * h)) / (h**2)
         else:
-            print('Please choose one of the following methods: center, prog, reg')
+            print("Please choose one of the following methods: center, prog, reg")
+
 
 # integration using multiple application of trapezoidal method
 def trapezoidal(func, a, b, n=1):
@@ -636,10 +659,10 @@ def trapezoidal(func, a, b, n=1):
     Returns:
         float: the value of the integration
     """
-    assert a < b, 'the inferior limit must be less than superior one'
-    h = (b - a)/n
-    xi = np.linspace(a, b, n+1)
-    return h/2*(func(xi[0]) + 2 * sum(map(func, xi[1:-1])) + func(xi[-1]))
+    assert a < b, "the inferior limit must be less than superior one"
+    h = (b - a) / n
+    xi = np.linspace(a, b, n + 1)
+    return h / 2 * (func(xi[0]) + 2 * sum(map(func, xi[1:-1])) + func(xi[-1]))
 
 
 # integration of a uivariate function using multiple application of Simpson 1/3 method
@@ -660,12 +683,16 @@ def simpson13(func, a, b, n=2):
     assert n > 1, "The simpson 1/3 needs at least 3 points, n = points - 1"
     assert n % 2 == 0, "The simpson 1/3 works only for par number of segments "
 
-    xi = np.linspace(a, b, n+1)
-    return ((b - a)/(3*n))*(func(xi[0]) + 4 * sum(func(xi[1:-1:2])) \
-           + 2 * sum(func(xi[2:-2:2])) + func(xi[-1]))
+    xi = np.linspace(a, b, n + 1)
+    return ((b - a) / (3 * n)) * (
+        func(xi[0])
+        + 4 * sum(func(xi[1:-1:2]))
+        + 2 * sum(func(xi[2:-2:2]))
+        + func(xi[-1])
+    )
 
 
-#integration of a function given four points using Simpson 3/8 method
+# integration of a function given four points using Simpson 3/8 method
 def _simpson38(func, xi):
     """integration of a function given four points using Simpson 3/8 method
 
@@ -677,11 +704,11 @@ def _simpson38(func, xi):
         float: the value of the integration
     """
 
-    assert len(xi) == 4,  "This version is designed only for 4 points integration"
+    assert len(xi) == 4, "This version is designed only for 4 points integration"
 
     h = xi[1] - xi[0]
-    return 3*h/8 *(func(xi[0]) + 3 * (func(xi[1]) + func(xi[2])) + func(xi[-1]))
-    
+    return 3 * h / 8 * (func(xi[0]) + 3 * (func(xi[1]) + func(xi[2])) + func(xi[-1]))
+
 
 # integration of a uivariate function using multiple application of Simpson 1/3 method
 def simpson38(func, a, b, n=3):
@@ -701,23 +728,25 @@ def simpson38(func, a, b, n=3):
     assert n > 2, "The simpson 3/8 needs at least 4 points, n = points - 1"
     assert n % 3 == 0, "The simpson 3/8 works only for the multiple of three segments "
 
-    xi = np.linspace(a, b, n+1)
+    xi = np.linspace(a, b, n + 1)
     not_multi_3 = []
     multi_3 = []
-    for idx in range(1,n):
+    for idx in range(1, n):
         if idx % 3 != 0:
             not_multi_3.append((idx))
         else:
             multi_3.append((idx))
 
     not_multi_3 = xi[not_multi_3]
-    multi_3 = xi[multi_3]    
-    return (3*(b - a)/(8*n))*(func(xi[0]) + 3 * sum(func(not_multi_3)) \
-        + 2 * sum(func(multi_3)) + func(xi[-1]))
+    multi_3 = xi[multi_3]
+    return (3 * (b - a) / (8 * n)) * (
+        func(xi[0]) + 3 * sum(func(not_multi_3)) + 2 * sum(func(multi_3)) + func(xi[-1])
+    )
+
 
 # integration using a mixture of Simpson 1/3 and 3/8
 def integrate(func, a, b, n=2):
-    """integration using a mixture of Simpson 1/3 and 3/8. 
+    """integration using a mixture of Simpson 1/3 and 3/8.
     The preference is using the Simpson 1/3.
 
     Args:
@@ -729,9 +758,9 @@ def integrate(func, a, b, n=2):
     Returns:
         float: the value of the integration
     """
-    assert a < b, 'the inferior limit must be less than the superior'
-    
-    xi = np.linspace(a, b, n+1)
+    assert a < b, "the inferior limit must be less than the superior"
+
+    xi = np.linspace(a, b, n + 1)
     if n == 1:
         return trapezoidal(func, a, b)
     elif n % 2 == 0:
@@ -739,8 +768,8 @@ def integrate(func, a, b, n=2):
     elif n == 3:
         return _simpson38(func, xi)
     else:
-        h = (b - a)/n
-        return _simpson38(func, xi[-4:]) + simpson13(func, a, b-3*h, n-3 )
+        h = (b - a) / n
+        return _simpson38(func, xi[-4:]) + simpson13(func, a, b - 3 * h, n - 3)
 
 
 # a helper function for solving a system of ODEs with simple Euler. This function takes one step
@@ -748,9 +777,9 @@ def _Euler(funcs, xi, yis, h):
     n = len(funcs)
     y = []
     for i in range(n):
-        y.append(yis[i] + funcs[i](xi, *yis)*h)
+        y.append(yis[i] + funcs[i](xi, *yis) * h)
     return y
-        
+
 
 def EulerSys(funcs, interval, yis, h):
     """Solving a system of ODEs using the Euler method.
@@ -777,42 +806,40 @@ def EulerSys(funcs, interval, yis, h):
     return X, Y
 
 
-
 # a helper function for solving a system of ODEs with RK4. This function takes one step
-def _RK4(funcs, xi, yis, h):
+def _RK4(funcs, xi, yi, h):
+    yi = np.array(yi)
 
-    yis = np.array(yis)
+    k1 = np.array([func(xi, *yi) for func in funcs])
 
-    k1 = np.array([func(xi, *yis) for func in funcs])
+    ym = yi + k1 * h / 2
 
-    ym = yis + k1*h/2
+    k2 = np.array([func(xi + h / 2, *ym) for func in funcs])
 
-    k2 = np.array([func(xi+h/2, *ym) for func in funcs])
+    ym = yi + k2 * h / 2
 
-    ym = yis + k2*h/2
+    k3 = np.array([func(xi + h / 2, *ym) for func in funcs])
 
-    k3 = np.array([func(xi+h/2, *ym) for func in funcs])
+    ye = yi + k3 * h
 
-    ye = yis + k3*h
+    k4 = np.array([func(xi + h, *ye) for func in funcs])
 
-    k4 = np.array([func(xi+h, *ye) for func in funcs])
+    slope = (k1 + 2 * (k2 + k3) + k4) / 6
 
-    
-    slope = (k1 + 2*(k2 + k3) + k4)/6 
-
-    yis += slope * h
+    yi += slope * h
     xi += h
 
-    return xi, yis
+    return xi, yi
+
 
 # A solver for a system of ODEs using the fourth order Runge-Kutta algorithm
-def RK4sys(funcs, interval, yis, h=0.1):
+def RK4sys(funcs, interval, y0, h=0.1):
     """Solving a system of ODEs using the fourth order Runge-Kutta method.
 
     Args:
-        funcs (list of callable): the right hand side of the ODEs in the form dyi/dx = fi(x,yis). Here `func` is `f(x,y)`
+        funcs (list of callables): the right hand side of the ODEs in the form dyi/dx = fi(x,yis). Here `func` is `f(x,y)`
         interval (array-like with two element): the initial and final point (x0, xf)
-        yis (list of int or float): the value of the functions at the initial point yi=yi(x0)
+        y0 (list of int or float): the value of the functions at the initial point y0=yi(x0)
         h (float, optional): initial step size. Defaults to 0.5.
 
     Returns:
@@ -821,69 +848,87 @@ def RK4sys(funcs, interval, yis, h=0.1):
     """
     xi, xf = interval
     X = [xi]
-    Y = [yis]
+    Y = [y0]
+    yi = y0
     while X[-1] < xf:
-        xi, yis = _RK4(funcs, xi, yis, h)
+        xi, yi = _RK4(funcs, xi, yi, h)
         X.append(xi)
-        Y.append(yis)
+        Y.append(yi)
 
     return X, Y
 
+
 # Helper RK Cash-Karp. This function takes just one step
 
+
 def _RKkc_step(func, xi, yi, h):
-    a1 = 37/378
-    a3 = 250/621
-    a4 = 125/594
-    a6 = 512/1771
-    b1 = 2825/27648
-    b3 = 18575/48384
-    b4 = 13525/55296
-    b5 = 277/14336
-    b6 = 1/4
+    a1 = 37 / 378
+    a3 = 250 / 621
+    a4 = 125 / 594
+    a6 = 512 / 1771
+    b1 = 2825 / 27648
+    b3 = 18575 / 48384
+    b4 = 13525 / 55296
+    b5 = 277 / 14336
+    b6 = 1 / 4
 
     k1 = func(xi, yi)
-    k2 = func(xi + h/5, yi+(k1*h)/5)
-    k3 = func(xi + 0.3*h, yi+(3*k1*h)/40 + (9*k2*h)/40)
-    k4 = func(xi + 0.6*h, yi+0.3*k1*h - 0.9*k2*h + 1.2*k3*h)
-    k5 = func(xi + h, yi - (11*k1*h)/54 + 2.5*k2*h - (70*k3*h)/27 + (35*k4*h)/27)
-    k6 = func(xi + 7*h/8, (1631*k1*h)/55296 + (175*k2*h)/512 \
-        + (575*k3*h)/13824 + (44275/110592)*k4*h + (253/4096)*k5*h)
-    
-    y4 = yi + (a1*k1 + a3*k3 + a4*k4 + a6*k6)*h
-    y5 = yi + (b1*k1 + b3*k3 + b4*k4 + b5*k5 + b6*k6)*h  #yout
+    k2 = func(xi + h / 5, yi + (k1 * h) / 5)
+    k3 = func(xi + 0.3 * h, yi + (3 * k1 * h) / 40 + (9 * k2 * h) / 40)
+    k4 = func(xi + 0.6 * h, yi + 0.3 * k1 * h - 0.9 * k2 * h + 1.2 * k3 * h)
+    k5 = func(
+        xi + h,
+        yi
+        - (11 * k1 * h) / 54
+        + 2.5 * k2 * h
+        - (70 * k3 * h) / 27
+        + (35 * k4 * h) / 27,
+    )
+    k6 = func(
+        xi + 7 * h / 8,
+        (1631 * k1 * h) / 55296
+        + (175 * k2 * h) / 512
+        + (575 * k3 * h) / 13824
+        + (44275 / 110592) * k4 * h
+        + (253 / 4096) * k5 * h,
+    )
+
+    y4 = yi + (a1 * k1 + a3 * k3 + a4 * k4 + a6 * k6) * h
+    y5 = yi + (b1 * k1 + b3 * k3 + b4 * k4 + b5 * k5 + b6 * k6) * h  # yout
     yerr = y5 - y4
-    #print(k1,k2,k3,k4,k5,k6)
+    # print(k1,k2,k3,k4,k5,k6)
     return y5, yerr
+
 
 # adaptive step for RK Cash-Karp
 def adapt(func, x, y, h, yscale, eps):
     safety = 0.9
-    econ=1.89e-4
+    econ = 1.89e-4
     ytemp, yerr = _RKkc_step(func, x, y, h)
-    emax = abs(yerr/(yscale*eps))
-    #print(emax)
-    if emax > 1: 
-        #print('exit')
-        #sys.exit(0)
+    emax = abs(yerr / (yscale * eps))
+    # print(emax)
+    if emax > 1:
+        # print('exit')
+        # sys.exit(0)
 
-        htemp = safety*h*emax**(-0.25)
-        h = max(abs(htemp), 0.25*abs(h))
+        htemp = safety * h * emax ** (-0.25)
+        h = max(abs(htemp), 0.25 * abs(h))
         xnew = x + h
         if xnew == x:
-            print('The solver is not moving')
+            print("The solver is not moving")
             sys.exit(0)
     if emax > econ:
-        hnxt = safety*emax**(-0.2)*h
+        hnxt = safety * emax ** (-0.2) * h
     else:
         hnxt = 4 * h
-    
+
     x += h
-    #print(h)
+    # print(h)
     return x, ytemp, hnxt
 
+
 # the main program for RK Cash-Karp that uses `_RKkc_step` and `adapt`
-def RKkc(func, interval, y0, maxstep=100, h=0.5, tiny=1e-30,eps=5e-5):
+def RKkc(func, interval, y0, maxstep=100, h=0.5, tiny=1e-30, eps=5e-5):
     """Solving an ODE problem using Runge-Kutta Cash-Karp algorithm.
 
     Args:
@@ -904,7 +949,6 @@ def RKkc(func, interval, y0, maxstep=100, h=0.5, tiny=1e-30,eps=5e-5):
     xs = [x]
     ys = [y]
 
-
     while True:
         if istep > maxstep and x <= xf:
             break
@@ -913,32 +957,34 @@ def RKkc(func, interval, y0, maxstep=100, h=0.5, tiny=1e-30,eps=5e-5):
 
         dy = func(x, y)
 
-        yscale = abs(y) + abs(h*dy) + tiny
+        yscale = abs(y) + abs(h * dy) + tiny
 
-        if (x+h)>xf:
+        if (x + h) > xf:
             h = xf - x
         x, y, h = adapt(func, x, y, h, yscale, eps)
-        #print(x, y)
-        #print(istep)
+        # print(x, y)
+        # print(istep)
         xs.append(x)
         ys.append(y)
 
     return xs, ys
+
 
 # To normalize a vector. It is needed to find the highest and lowest eigenvalues of a system
 def normalize(x):
     """Normalize a vector
 
     Args:
-        x (ndarray): the vector (numpy array)to normal. 
+        x (ndarray): the vector (numpy array)to normal.
 
     Returns:
         tuple: the normalization factor and the normalized vector
     """
     fac = x.max()
-    #fac = abs(x).max()
+    # fac = abs(x).max()
     x_n = x / fac
     return fac, x_n
+
 
 # Find the highest eigenvalue of a matrix
 def power_method(A, x0, tol=1e-5, max_iter=100):
@@ -957,7 +1003,7 @@ def power_method(A, x0, tol=1e-5, max_iter=100):
     error = 1000
     lambda_1, x0 = normalize(x0)
 
-    while error > tol and iteration<max_iter:
+    while error > tol and iteration < max_iter:
         lambda_old = lambda_1
         x0 = np.dot(A, x0)
         lambda_1, x0 = normalize(x0)
@@ -965,6 +1011,4 @@ def power_method(A, x0, tol=1e-5, max_iter=100):
 
         error = abs(lambda_1 - lambda_old)
 
-
     return lambda_1, x0
-

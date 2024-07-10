@@ -548,7 +548,7 @@ def gauss_newton(x, y, func, vars, params, A0, xi=None, tol=1e-5, max_iter=20):
 
 
 # 1D Lagrange polinomial interpolation
-def lagrange_interpolation(x, y, n, xi):
+def lagrange_interpolation(x, y, xi, n=None):
     """
     x: a list of independent variables
     y: a list of dependent variables
@@ -557,7 +557,10 @@ def lagrange_interpolation(x, y, n, xi):
     """
 
     assert len(x) == len(y), "The same size"
-    assert len(x) > n, "for the n-degree interpolation n+1 points are needed"
+    if n is not None:
+        assert len(x) > n, "for the n-degree interpolation n+1 points are needed"
+    else:
+        n = len(x) - 1
 
     sum = 0
     for i in range(n + 1):
